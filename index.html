@@ -1,0 +1,827 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, viewport-fit=cover">
+  <title>HAPPY BIRTHDAY! 🌸 ✨</title>
+
+  <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700;800&family=Pacifico&family=Caveat:wght@600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+  <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.5.1/dist/confetti.browser.min.js"></script>
+
+  <style>
+    :root {
+      --primary-pink: #f7a8b8;
+      --soft-pink: #fde8ed;
+      --accent-rose: #e88a9d;
+      --gold: #f3c98b;
+      --text-color: #6b4e57;
+      --bg-gradient: linear-gradient(135deg, #fff0f3 0%, #fce4ec 50%, #f8bbd0 100%);
+      --card-gradient: linear-gradient(135deg, #f8bbd0 0%, #fde8ed 100%);
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    html { scroll-behavior: smooth; }
+
+    body {
+      font-family: 'Montserrat', sans-serif;
+      background: var(--bg-gradient);
+      background-attachment: fixed;
+      color: var(--text-color);
+      overflow-x: hidden;
+      padding-bottom: 60px;
+      position: relative;
+    }
+
+    /* ===== Падающие лепестки/сердечки ===== */
+    #petal-canvas {
+      position: fixed;
+      inset: 0;
+      pointer-events: none;
+      z-index: 1;
+    }
+
+    .container {
+      max-width: 950px;
+      margin: 0 auto;
+      padding: 20px;
+      text-align: center;
+      position: relative;
+      z-index: 2;
+    }
+
+    .music-control {
+      position: fixed;
+      top: 20px;
+      right: 20px;
+      background: rgba(255, 255, 255, 0.85);
+      backdrop-filter: blur(5px);
+      padding: 12px;
+      border-radius: 50%;
+      cursor: pointer;
+      box-shadow: 0 4px 15px rgba(232, 138, 157, 0.25);
+      z-index: 1000;
+      transition: transform 0.3s ease;
+    }
+    .music-control:hover { transform: scale(1.1); }
+    .music-control i { font-size: 1.3rem; color: var(--accent-rose); }
+    .music-control.playing { animation: spin 3s linear infinite; }
+    @keyframes spin { from { transform: rotate(0deg);} to { transform: rotate(360deg);} }
+
+    header { margin: 50px 0 30px; }
+
+    header h1 {
+      font-family: 'Pacifico', cursive;
+      font-size: 3.6rem;
+      margin-bottom: 12px;
+      background: linear-gradient(90deg, #e88a9d, #f3c98b, #f7a8b8, #e88a9d);
+      background-size: 300% 100%;
+      -webkit-background-clip: text;
+      background-clip: text;
+      color: transparent;
+      animation: shimmer 5s linear infinite;
+      text-shadow: 0 2px 25px rgba(247,168,184,0.4);
+    }
+    @keyframes shimmer {
+      0% { background-position: 0% 50%; }
+      100% { background-position: 300% 50%; }
+    }
+
+    header p.subtitle {
+      font-size: 1.3rem;
+      color: var(--text-color);
+      font-weight: 600;
+      opacity: 0;
+      animation: fadeUp 1s ease forwards 0.4s;
+    }
+
+    @keyframes fadeUp {
+      from { opacity: 0; transform: translateY(15px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    .heart-icon {
+      color: var(--accent-rose);
+      font-size: 1.1rem;
+      margin: 0 6px;
+      animation: heartbeat 1.8s infinite;
+      display: inline-block;
+    }
+
+    @keyframes heartbeat {
+      0% { transform: scale(1); }
+      50% { transform: scale(1.25); }
+      100% { transform: scale(1); }
+    }
+
+    .btn-surprise {
+      background: linear-gradient(135deg, #f7a8b8 0%, #e88a9d 100%);
+      color: white;
+      border: none;
+      padding: 16px 36px;
+      font-size: 1.1rem;
+      font-weight: 700;
+      border-radius: 30px;
+      cursor: pointer;
+      box-shadow: 0 8px 20px rgba(232, 138, 157, 0.35);
+      transition: all 0.3s ease;
+      margin: 25px 0;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .btn-surprise::after {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background: radial-gradient(circle, rgba(255,255,255,0.5) 0%, transparent 70%);
+      opacity: 0;
+      transition: opacity 0.3s;
+    }
+
+    .btn-surprise:hover {
+      transform: translateY(-3px) scale(1.03);
+      box-shadow: 0 14px 28px rgba(232, 138, 157, 0.5);
+    }
+    .btn-surprise:hover::after { opacity: 1; }
+    .btn-surprise:active { transform: translateY(-1px) scale(0.98); }
+
+    .memories-title {
+      font-family: 'Caveat', cursive;
+      font-weight: 700;
+      font-size: 3rem;
+      margin: 60px 0 25px;
+      color: var(--accent-rose);
+    }
+
+    .memory-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(270px, 1fr));
+      gap: 25px;
+    }
+
+    .memory-card {
+      height: 370px;
+      perspective: 1000px;
+      cursor: pointer;
+      opacity: 0;
+      animation: cardIn 0.7s ease forwards;
+    }
+    .memory-card:nth-child(1) { animation-delay: 0.1s; }
+    .memory-card:nth-child(2) { animation-delay: 0.3s; }
+    .memory-card:nth-child(3) { animation-delay: 0.5s; }
+
+    @keyframes cardIn {
+      from { opacity: 0; transform: translateY(30px) scale(0.95); }
+      to { opacity: 1; transform: translateY(0) scale(1); }
+    }
+
+    .memory-card-inner {
+      position: relative;
+      width: 100%;
+      height: 100%;
+      transition: transform 0.8s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+      transform-style: preserve-3d;
+      box-shadow: 0 10px 25px rgba(232, 138, 157, 0.2);
+      border-radius: 22px;
+    }
+
+    .memory-card.flipped .memory-card-inner {
+      transform: rotateY(180deg);
+    }
+
+    /* На устройствах с настоящим hover (мышь) — переворот и по наведению */
+    @media (hover: hover) and (pointer: fine) {
+      .memory-card:hover .memory-card-inner {
+        transform: rotateY(180deg);
+      }
+    }
+
+    .memory-card-front, .memory-card-back {
+      position: absolute;
+      width: 100%;
+      height: 100%;
+      backface-visibility: hidden;
+      border-radius: 22px;
+      overflow: hidden;
+    }
+
+    .memory-card-front img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+    }
+
+    .memory-card-front .img-fallback {
+      width: 100%;
+      height: 100%;
+      display: none;
+      align-items: center;
+      justify-content: center;
+      flex-direction: column;
+      background: var(--card-gradient);
+      gap: 10px;
+    }
+    .memory-card-front .img-fallback i {
+      font-size: 2.6rem;
+      color: var(--accent-rose);
+    }
+    .memory-card-front .img-fallback span {
+      font-size: 0.85rem;
+      color: var(--text-color);
+      padding: 0 20px;
+    }
+
+    .card-badge {
+      position: absolute;
+      bottom: 18px;
+      left: 50%;
+      transform: translateX(-50%);
+      background: rgba(255, 240, 243, 0.92);
+      backdrop-filter: blur(4px);
+      padding: 7px 18px;
+      border-radius: 20px;
+      font-size: 0.85rem;
+      font-weight: 600;
+      color: var(--accent-rose);
+      box-shadow: 0 4px 12px rgba(0,0,0,0.06);
+    }
+
+    .memory-card-back {
+      background: var(--card-gradient);
+      color: var(--text-color);
+      transform: rotateY(180deg);
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      padding: 25px;
+    }
+
+    .memory-card-back i {
+      font-size: 2.2rem;
+      color: var(--accent-rose);
+      margin-bottom: 12px;
+    }
+
+    .memory-card-back h3 {
+      font-size: 1.4rem;
+      margin-bottom: 10px;
+      font-family: 'Pacifico', cursive;
+      color: var(--accent-rose);
+    }
+
+    .memory-card-back p {
+      font-size: 0.95rem;
+      line-height: 1.5;
+    }
+
+    .gift-section {
+      margin: 70px 0 20px;
+      background: rgba(255, 255, 255, 0.7);
+      backdrop-filter: blur(8px);
+      padding: 40px 35px;
+      border-radius: 25px;
+      box-shadow: 0 10px 30px rgba(232, 138, 157, 0.15);
+      border: 1px solid rgba(255, 255, 255, 0.8);
+    }
+
+    .gift-title {
+      font-family: 'Caveat', cursive;
+      font-weight: 700;
+      font-size: 2.8rem;
+      color: var(--accent-rose);
+      margin-bottom: 20px;
+    }
+
+    .gift-box {
+      font-size: 4.8rem;
+      color: var(--primary-pink);
+      cursor: pointer;
+      transition: transform 0.3s ease;
+      display: inline-block;
+      margin-bottom: 15px;
+      animation: floatGift 2.4s ease-in-out infinite, glowGift 2.4s ease-in-out infinite;
+    }
+
+    @keyframes floatGift {
+      0%, 100% { transform: translateY(0) rotate(0deg); }
+      50% { transform: translateY(-10px) rotate(-4deg); }
+    }
+    @keyframes glowGift {
+      0%, 100% { filter: drop-shadow(0 0 4px rgba(247,168,184,0.4)); }
+      50% { filter: drop-shadow(0 0 22px rgba(247,168,184,0.9)); }
+    }
+
+    .gift-box:hover { transform: scale(1.15); }
+
+    .gift-box.open {
+      animation: openGift 0.6s forwards;
+    }
+
+    @keyframes openGift {
+      0% { transform: scale(1) rotate(0deg); opacity: 1; }
+      60% { transform: scale(1.3) rotate(15deg); opacity: 1; }
+      100% { transform: scale(0) rotate(30deg); opacity: 0; }
+    }
+
+    .gift-hint {
+      font-size: 0.9rem;
+      color: var(--accent-rose);
+      opacity: 0.8;
+      margin-bottom: 10px;
+    }
+
+    .hidden-letter {
+      display: none;
+      opacity: 0;
+      transition: opacity 0.8s ease;
+      text-align: left;
+    }
+
+    .hidden-letter.show {
+      display: block;
+      opacity: 1;
+      animation: fadeUp 0.9s ease;
+    }
+
+    .hidden-letter h2 {
+      color: var(--accent-rose);
+      font-family: 'Pacifico', cursive;
+      margin-bottom: 18px;
+      text-align: center;
+      font-size: 1.9rem;
+    }
+
+    .hidden-letter p {
+      line-height: 1.85;
+      font-size: 1.05rem;
+      color: var(--text-color);
+      margin-bottom: 15px;
+    }
+
+    .btn-reload {
+      background: transparent;
+      border: 1px solid var(--accent-rose);
+      color: var(--accent-rose);
+      padding: 9px 22px;
+      border-radius: 20px;
+      cursor: pointer;
+      margin-top: 10px;
+      font-size: 0.85rem;
+      transition: all 0.3s ease;
+      display: block;
+      margin-left: auto;
+      margin-right: auto;
+    }
+
+    .btn-reload:hover { background: var(--soft-pink); }
+
+    footer {
+      margin-top: 50px;
+      font-family: 'Caveat', cursive;
+      font-size: 1.4rem;
+      color: var(--accent-rose);
+      opacity: 0.85;
+    }
+
+    /* ===== Комплименты ===== */
+    .compliment-section {
+      margin: 45px 0;
+    }
+
+    .btn-compliment {
+      background: rgba(255,255,255,0.75);
+      border: 1.5px solid var(--accent-rose);
+      color: var(--accent-rose);
+      padding: 14px 30px;
+      font-size: 1rem;
+      font-weight: 600;
+      border-radius: 30px;
+      cursor: pointer;
+      transition: all 0.25s ease;
+      -webkit-tap-highlight-color: transparent;
+    }
+    .btn-compliment:active { transform: scale(0.96); background: var(--soft-pink); }
+
+    .compliment-box {
+      margin-top: 20px;
+      min-height: 70px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 18px 24px;
+      background: rgba(255,255,255,0.65);
+      border-radius: 18px;
+      font-family: 'Caveat', cursive;
+      font-size: 1.6rem;
+      font-weight: 700;
+      color: var(--accent-rose);
+      opacity: 0;
+      transform: translateY(8px);
+      transition: opacity 0.4s ease, transform 0.4s ease;
+    }
+    .compliment-box.show { opacity: 1; transform: translateY(0); }
+
+    /* ===== Шаринг ===== */
+    .btn-share {
+      background: transparent;
+      border: none;
+      color: var(--accent-rose);
+      font-size: 0.9rem;
+      margin-top: 18px;
+      cursor: pointer;
+      text-decoration: underline;
+      opacity: 0.85;
+      -webkit-tap-highlight-color: transparent;
+    }
+
+    /* ===== Мобильная адаптация ===== */
+    @media (max-width: 600px) {
+      body { padding-bottom: calc(60px + env(safe-area-inset-bottom)); }
+      .music-control {
+        top: calc(16px + env(safe-area-inset-top));
+        right: 16px;
+        padding: 14px;
+      }
+      .container { padding: 16px; }
+      header { margin: 30px 0 20px; }
+      header h1 { font-size: 2.3rem; }
+      header p.subtitle { font-size: 1.05rem; }
+      .btn-surprise {
+        width: 100%;
+        padding: 16px 20px;
+        font-size: 1rem;
+      }
+      .memories-title { font-size: 2.1rem; margin: 40px 0 20px; }
+      .memory-grid { gap: 18px; }
+      .memory-card { height: 320px; }
+      .memory-card-back h3 { font-size: 1.25rem; }
+      .memory-card-back p { font-size: 0.9rem; }
+      .card-badge { font-size: 0.78rem; padding: 6px 14px; }
+      .gift-section { padding: 28px 20px; margin: 45px 0 20px; }
+      .gift-title { font-size: 2.2rem; }
+      .gift-box { font-size: 4rem; }
+      .hidden-letter h2 { font-size: 1.6rem; }
+      .hidden-letter p { font-size: 1rem; }
+      .btn-compliment { width: 100%; padding: 14px 20px; }
+      .compliment-box { font-size: 1.35rem; }
+      footer { font-size: 1.2rem; margin-top: 35px; }
+    }
+
+    @media (max-width: 360px) {
+      header h1 { font-size: 1.95rem; }
+      .memories-title { font-size: 1.8rem; }
+    }
+    /* ===== Стартовый экран ===== */
+    #intro-overlay {
+      position: fixed;
+      inset: 0;
+      z-index: 3000;
+      background: var(--bg-gradient);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-direction: column;
+      text-align: center;
+      padding: 20px;
+      transition: opacity 0.8s ease, visibility 0.8s ease;
+    }
+    #intro-overlay.hide {
+      opacity: 0;
+      visibility: hidden;
+      pointer-events: none;
+    }
+    #intro-overlay .intro-emoji {
+      font-size: 3.2rem;
+      margin-bottom: 10px;
+      animation: floatGift 2.4s ease-in-out infinite;
+    }
+    #intro-overlay h2 {
+      font-family: 'Pacifico', cursive;
+      font-size: 2.2rem;
+      color: var(--accent-rose);
+      margin-bottom: 10px;
+      text-shadow: 0 2px 20px rgba(255,255,255,0.8);
+    }
+    #intro-overlay p {
+      font-size: 1rem;
+      color: var(--text-color);
+      margin-bottom: 28px;
+      max-width: 320px;
+    }
+    .btn-open {
+      background: linear-gradient(135deg, #f7a8b8 0%, #e88a9d 100%);
+      color: white;
+      border: none;
+      padding: 17px 42px;
+      font-size: 1.1rem;
+      font-weight: 700;
+      border-radius: 30px;
+      cursor: pointer;
+      box-shadow: 0 10px 25px rgba(232, 138, 157, 0.4);
+      animation: pulseOpen 1.8s ease-in-out infinite;
+      -webkit-tap-highlight-color: transparent;
+    }
+    @keyframes pulseOpen {
+      0%, 100% { transform: scale(1); }
+      50% { transform: scale(1.05); }
+    }
+
+    .site-content { display: none; }
+  </style>
+</head>
+<body>
+
+  <canvas id="petal-canvas"></canvas>
+
+  <div id="intro-overlay">
+    <div class="intro-emoji">🎁</div>
+    <h2>АЙНАААААШ HAPPY BIRTHDAY!!</h2>
+    <p>Нажми, чтобы открыть поздравление и включить музыку</p>
+    <button class="btn-open" onclick="openIntro()">НАЖМИ СЮДААА 🎉</button>
+  </div>
+
+  <div class="music-control" onclick="toggleMusic()">
+    <i class="fas fa-music" id="music-icon"></i>
+  </div>
+  <audio id="birthday-song" loop>
+    <source src="happyBD.mp3" type="audio/mpeg">
+  </audio>
+
+  <div class="container site-content">
+    <header>
+      <h1>Happy Birthday! 🌸</h1>
+      <p class="subtitle">С днём рождения, АЙНАШ! <i class="fas fa-heart heart-icon"></i></p>
+      <button class="btn-surprise" onclick="fireworksConfetti()">НАЖМИ ЭТТООО ✨</button>
+    </header>
+
+    <h2 class="memories-title">ПОМНИШЬ ДАА ЭТИ ФОТКИИ ??💖</h2>
+
+    <div class="memory-grid">
+      <div class="memory-card" onclick="this.classList.toggle('flipped')">
+        <div class="memory-card-inner">
+          <div class="memory-card-front">
+            <img src="photo1.jpeg" alt="Наши улыбки" onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
+            <div class="img-fallback"><i class="fas fa-image"></i><span>Добавь сюда photo1.jpeg</span></div>
+            <span class="card-badge">Нажми меня 🌷</span>
+          </div>
+          <div class="memory-card-back">
+            <i class="fas fa-sparkles"></i>
+            <h3>Это тыыы в моем телефоне ✨</h3>
+            <p> Даже не верится, что это время уже позади. Эти дни подарили столько эмоций, теплых разговоров и общих моментов. Спасибо за всё, что мы пережили вместе. Это останется в моём сердце, и я всегда буду вспоминать это время с улыбкой и благодарностью.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="memory-card" onclick="this.classList.toggle('flipped')">
+        <div class="memory-card-inner">
+          <div class="memory-card-front">
+            <img src="photo2.jpeg" alt="Архивные кадры" onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
+            <div class="img-fallback"><i class="fas fa-image"></i><span>Добавь сюда photo2.jpeg</span></div>
+            <span class="card-badge">Нажми меня 🌷</span>
+          </div>
+          <div class="memory-card-back">
+            <i class="fas fa-heart"></i>
+            <h3>Архивные кадры 📸</h3>
+            <p>Нашла это фото и сразу столько воспоминаний.❤️ Школа, беззаботные дни, куча смеха и мы. Время летит, но самые тёплые моменты навсегда остаются в сердце.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="memory-card" onclick="this.classList.toggle('flipped')">
+        <div class="memory-card-inner">
+          <div class="memory-card-front">
+            <img src="photo3.jpeg" alt="Твой день" onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
+            <div class="img-fallback"><i class="fas fa-image"></i><span>Добавь сюда photo3.jpeg</span></div>
+            <span class="card-badge">Нажми меня 🌷</span>
+          </div>
+          <div class="memory-card-back">
+            <i class="fas fa-crown"></i>
+            <h3>Твой день 🌸</h3>
+            <p>Нашла только эти фотки, но если что — могу поменять на другие 🥹</p>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="compliment-section">
+      <button class="btn-compliment" onclick="showCompliment()">Жми сюда за комплиментом 💌</button>
+      <div class="compliment-box" id="compliment-box"></div>
+    </div>
+
+    <div class="gift-section">
+      <h2 class="gift-title">Твой сюрприз 🎁</h2>
+      <p class="gift-hint">нажми на коробочку</p>
+      <div class="gift-box" id="gift-box" onclick="openGift()">
+        <i class="fas fa-gift"></i>
+      </div>
+
+      <div class="hidden-letter" id="hidden-letter">
+        <h2>Дорогая моя! 💕</h2>
+        <p>Поздравляю тебя с днём рождения! Желаю, чтобы твоя жизнь была такой же нежной, красивой и вдохновляющей, как эта страница.</p>
+        <p>Пусть каждый день дарит повод для улыбки, мечты легко сбываются, а вокруг будут только самые любящие и настоящие люди.</p>
+        <p>Очень сильно тебя ценю и люблю! 🌸✨</p>
+        <button class="btn-reload" onclick="location.reload()">Посмотреть ещё раз 🔄</button>
+      </div>
+    </div>
+
+    <button class="btn-share" onclick="sharePage()">Поделиться этой страницей 📲</button>
+
+    <footer>сделано с любовью, для тебя 💌</footer>
+  </div>
+
+  <script>
+    /* ===== Конфетти-фейерверк ===== */
+    function fireworksConfetti() {
+      const colors = ['#f7a8b8', '#fde8ed', '#e88a9d', '#f3c98b', '#ffffff'];
+      const duration = 1800;
+      const end = Date.now() + duration;
+
+      (function frame() {
+        confetti({ particleCount: 4, angle: 60, spread: 60, origin: { x: 0 }, colors });
+        confetti({ particleCount: 4, angle: 120, spread: 60, origin: { x: 1 }, colors });
+        if (Date.now() < end) requestAnimationFrame(frame);
+      })();
+
+      confetti({ particleCount: 150, spread: 100, origin: { y: 0.5 }, colors, startVelocity: 45 });
+    }
+
+    window.onload = function () {
+      // конфетти теперь запускается при нажатии на "Открыть"
+    };
+
+    function openIntro() {
+      const overlay = document.getElementById('intro-overlay');
+      const content = document.querySelector('.site-content');
+
+      audio.play().catch(() => {
+        // если браузер всё же заблокировал звук — иконка подскажет нажать вручную
+      });
+      musicIcon.classList.remove('fa-music');
+      musicIcon.classList.add('fa-pause');
+      musicBtn.classList.add('playing');
+
+      content.style.display = 'block';
+      overlay.classList.add('hide');
+
+      setTimeout(fireworksConfetti, 300);
+    }
+
+    function openGift() {
+      const giftBox = document.getElementById('gift-box');
+      const hiddenLetter = document.getElementById('hidden-letter');
+
+      giftBox.classList.add('open');
+
+      setTimeout(() => {
+        fireworksConfetti();
+        hiddenLetter.classList.add('show');
+        hiddenLetter.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      }, 550);
+    }
+
+    /* ===== Генератор комплиментов ===== */
+const compliments = [
+  "💛 Ты делаешь этот мир добрее просто тем, что ты есть.",
+  "🌸 С тобой хочется смеяться, мечтать и просто быть собой.",
+  "✨ Ты умеешь превращать обычные моменты в самые тёплые воспоминания.",
+  "🫶 Спасибо, что всегда остаёшься такой искренней и настоящей.",
+  "🌷 Ты — человек, рядом с которым чувствуешь себя как дома.",
+  "💖 Твоя забота и доброта запоминаются надолго.",
+  "☀️ Пусть жизнь радует тебя так же часто, как ты радуешь окружающих.",
+  "🌈 Ты заслуживаешь любви, счастья и исполнения всех своих желаний.",
+  "🤍 Оставайся такой же светлой, сильной и невероятной.",
+  "🌺 Ты — одна из тех людей, которых встречаешь и понимаешь: это подарок судьбы.",
+  "🎀 С тобой любое приключение становится особенным.",
+  "🥹 Я очень ценю нашу дружбу и благодарна, что ты есть в моей жизни.",
+  "🌟 Пусть каждый твой день будет наполнен счастьем, уютом и любовью.",
+  "💕 Никогда не переставай улыбаться — тебе это очень идёт.",
+  "🦋 Ты — человек, которого хочется беречь и поддерживать так же, как ты поддерживаешь других."
+];
+    let lastCompliment = -1;
+    function showCompliment() {
+      const box = document.getElementById('compliment-box');
+      let idx;
+      do { idx = Math.floor(Math.random() * compliments.length); } while (idx === lastCompliment);
+      lastCompliment = idx;
+      box.classList.remove('show');
+      setTimeout(() => {
+        box.textContent = compliments[idx];
+        box.classList.add('show');
+        confetti({ particleCount: 40, spread: 55, origin: { y: 0.7 }, colors: ['#f7a8b8', '#f3c98b', '#e88a9d'] });
+      }, 150);
+    }
+
+    /* ===== Поделиться ===== */
+    function sharePage() {
+      if (navigator.share) {
+        navigator.share({
+          title: 'С Днём Рождения! 🌸',
+          text: 'Смотри, что я для тебя сделала 💕',
+          url: window.location.href
+        }).catch(() => {});
+      } else {
+        navigator.clipboard.writeText(window.location.href).then(() => {
+          alert('Ссылка скопирована! Отправь её подруге 💌');
+        });
+      }
+    }
+
+    const audio = document.getElementById('birthday-song');
+    const musicIcon = document.getElementById('music-icon');
+    const musicBtn = document.querySelector('.music-control');
+
+    function toggleMusic() {
+      if (audio.paused) {
+        audio.play();
+        musicIcon.classList.remove('fa-music');
+        musicIcon.classList.add('fa-pause');
+        musicBtn.classList.add('playing');
+      } else {
+        audio.pause();
+        musicIcon.classList.remove('fa-pause');
+        musicIcon.classList.add('fa-music');
+        musicBtn.classList.remove('playing');
+      }
+    }
+
+    /* ===== Падающие лепестки/сердечки на canvas ===== */
+    const canvas = document.getElementById('petal-canvas');
+    const ctx = canvas.getContext('2d');
+    let W, H;
+
+    function resize() {
+      W = canvas.width = window.innerWidth;
+      H = canvas.height = window.innerHeight;
+    }
+    window.addEventListener('resize', resize);
+    resize();
+
+    const emojiSet = ['🌸', '💗', '✨', '🌷'];
+    const balloonSet = ['🎈', '🎀'];
+    const isSmall = window.innerWidth < 600;
+    const petals = Array.from({ length: isSmall ? 16 : 26 }, () => spawnPetal());
+    const balloons = Array.from({ length: isSmall ? 5 : 8 }, () => spawnBalloon());
+
+    function spawnPetal(randomY = true) {
+      return {
+        x: Math.random() * W,
+        y: randomY ? Math.random() * H : -20,
+        size: 14 + Math.random() * 14,
+        speed: 0.6 + Math.random() * 1.2,
+        drift: Math.random() * 1.2 - 0.6,
+        angle: Math.random() * Math.PI * 2,
+        spin: (Math.random() - 0.5) * 0.02,
+        emoji: emojiSet[Math.floor(Math.random() * emojiSet.length)]
+      };
+    }
+
+    function spawnBalloon(randomY = true) {
+      return {
+        x: Math.random() * W,
+        y: randomY ? H + Math.random() * H : H + 20,
+        size: 22 + Math.random() * 16,
+        speed: 0.4 + Math.random() * 0.7,
+        drift: Math.random() * 1 - 0.5,
+        angle: Math.random() * Math.PI * 2,
+        emoji: balloonSet[Math.floor(Math.random() * balloonSet.length)]
+      };
+    }
+
+    function animatePetals() {
+      ctx.clearRect(0, 0, W, H);
+
+      petals.forEach(p => {
+        p.y += p.speed;
+        p.x += Math.sin(p.angle) * p.drift;
+        p.angle += p.spin;
+        if (p.y > H + 20) Object.assign(p, spawnPetal(false));
+
+        ctx.save();
+        ctx.globalAlpha = 0.75;
+        ctx.font = `${p.size}px serif`;
+        ctx.fillText(p.emoji, p.x, p.y);
+        ctx.restore();
+      });
+
+      balloons.forEach(b => {
+        b.y -= b.speed;
+        b.angle += 0.02;
+        b.x += Math.sin(b.angle) * b.drift;
+        if (b.y < -40) Object.assign(b, spawnBalloon(false));
+
+        ctx.save();
+        ctx.globalAlpha = 0.5;
+        ctx.font = `${b.size}px serif`;
+        ctx.fillText(b.emoji, b.x, b.y);
+        ctx.restore();
+      });
+
+      requestAnimationFrame(animatePetals);
+    }
+    animatePetals();
+  </script>
+
+</body>
+</html>
